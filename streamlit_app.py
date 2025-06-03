@@ -1,9 +1,9 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
 
-# Set your OpenAI API key here or in your environment variables
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Replace if needed
+# Initialize OpenAI client
+client = OpenAI()  # Uses OPENAI_API_KEY from environment variables
 
 def simulate_neurodiverse_feedback(ux_copy: str) -> str:
     system_prompt = (
@@ -13,8 +13,7 @@ def simulate_neurodiverse_feedback(ux_copy: str) -> str:
     )
 
     user_prompt = (
-        f"UX Copy to Evaluate:\n"
-        f"{ux_copy}\n\n"
+        f"UX Copy to Evaluate:\n{ux_copy}\n\n"
         "Please provide:\n"
         "1. Clarity Rating (1–5): How easy is this to understand?\n"
         "2. Cognitive Load Rating (1–5): How mentally taxing is this?\n"
@@ -22,7 +21,7 @@ def simulate_neurodiverse_feedback(ux_copy: str) -> str:
         "4. Suggestions to improve accessibility and usability."
     )
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": system_prompt},
@@ -31,7 +30,7 @@ def simulate_neurodiverse_feedback(ux_copy: str) -> str:
         temperature=0.4
     )
 
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content
 
 # Streamlit App
 st.set_page_config(page_title="Neurodiverse UX Autorater", layout="centered")
@@ -48,4 +47,5 @@ if st.button("Rate UX Copy"):
             st.text_area("Feedback", feedback, height=300)
     else:
         st.warning("Please enter UX copy first.")
+
 
