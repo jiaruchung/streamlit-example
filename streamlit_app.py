@@ -7,21 +7,20 @@ openai.api_key = os.getenv("OPENAI_API_KEY")  # Replace if needed
 
 def simulate_neurodiverse_feedback(ux_copy: str) -> str:
     system_prompt = (
-        "You are simulating a neurodivergent user (specifically autistic and ADHD traits) \
-        evaluating a piece of UX copy. Focus on cognitive load, clarity, tone, \
-        and any sensory or attention challenges it may present. Be honest and concrete."
+        "You are simulating a neurodivergent user (specifically autistic and ADHD traits) "
+        "evaluating a piece of UX copy. Focus on cognitive load, clarity, tone, "
+        "and any sensory or attention challenges it may present. Be honest and concrete."
     )
 
-    user_prompt = f"""
-    UX Copy to Evaluate:
-    {ux_copy}
-
-    Please provide:
-    1. Clarity Rating (1–5): How easy is this to understand?
-    2. Cognitive Load Rating (1–5): How mentally taxing is this?
-    3. Sensory/Distraction Issues: Any sensory overload or disruptive structure?
-    4. Suggestions to improve accessibility and usability.
-    """
+    user_prompt = (
+        f"UX Copy to Evaluate:\n"
+        f"{ux_copy}\n\n"
+        "Please provide:\n"
+        "1. Clarity Rating (1–5): How easy is this to understand?\n"
+        "2. Cognitive Load Rating (1–5): How mentally taxing is this?\n"
+        "3. Sensory/Distraction Issues: Any sensory overload or disruptive structure?\n"
+        "4. Suggestions to improve accessibility and usability."
+    )
 
     response = openai.ChatCompletion.create(
         model="gpt-4",
@@ -50,6 +49,3 @@ if st.button("Rate UX Copy"):
     else:
         st.warning("Please enter UX copy first.")
 
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
