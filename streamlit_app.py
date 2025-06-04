@@ -8,7 +8,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # --- Page Setup ---
 st.set_page_config(page_title="Persona UX Autorater", layout="centered")
 
-# --- Custom Dark Theme Styling ---
+# --- Custom Dark Theme Styling + ✅ Button Fix ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -23,16 +23,16 @@ textarea, input, .stTextInput>div>div>input {
     color: #e0e0e0 !important;
 }
 div.stButton > button {
-    background-color: #00000 !important;  /* white background */
-    color: #fffff !important;             /* black text */
+    background-color: #ffffff !important;
+    color: #000000 !important;
     font-weight: bold !important;
     border-radius: 10px !important;
     padding: 0.6em 1.4em !important;
-    border: 1px solid #00000 !important;
+    border: none !important;
 }
 div.stButton > button:hover {
-    background-color: #00000!important;
-    color: #fffff !important;
+    background-color: #f2f2f2 !important;
+    color: #000000 !important;
 }
 a {
     color: #00bfff !important;
@@ -49,7 +49,7 @@ st.title("👥 Persona-Based UX Autorater")
 st.subheader("Simulate accessibility feedback from diverse users before you ship.")
 st.markdown("Test your UX copy with AI-generated feedback from **neurodiverse and accessibility personas**.")
 
-# --- Persona Overview (Cute Icons) ---
+# --- Persona Overview ---
 st.markdown("""
 ### 💡 Supported Personas
 
@@ -71,17 +71,11 @@ persona = st.selectbox("Choose a simulated user persona:", [
 
 # --- UX Input Section ---
 st.markdown("### 🎯 Try It Free")
-st.markdown(
-    "_Paste a message or microcopy that users will read in your product — for example, a confirmation message, tooltip, button label, or system alert._"
-)
+st.markdown("_Paste a message or microcopy that users will read in your product — for example, a confirmation message, tooltip, button label, or system alert._")
 
 default_example = "Thanks! We’ve received your request. You’ll get a response shortly."
 
-ux_input = st.text_area(
-    "Enter your UX copy:",
-    value=default_example,
-    height=180
-)
+ux_input = st.text_area("Enter your UX copy:", value=default_example, height=180)
 
 # --- Prompt Builder ---
 def build_prompt(ux_text, persona):
@@ -133,7 +127,7 @@ def get_feedback(ux_text, persona):
     )
     return response.choices[0].message.content
 
-# --- Evaluation Button ---
+# --- Autorater Evaluation ---
 if st.button("Run Autorater"):
     if ux_input.strip():
         with st.spinner("Simulating feedback..."):
@@ -143,7 +137,7 @@ if st.button("Run Autorater"):
     else:
         st.warning("Please enter UX copy first.")
 
-# --- CTA Section ---
+# --- Call to Action ---
 st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
@@ -151,6 +145,7 @@ st.markdown(
     "[💳 Buy Full Evaluation →](https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00)",
     unsafe_allow_html=True
 )
+
 
 
 
