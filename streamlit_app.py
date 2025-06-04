@@ -23,8 +23,8 @@ textarea, input, .stTextInput>div>div>input {
     color: #e0e0e0 !important;
 }
 div.stButton > button {
-    background-color: #ffffff !important;  /* white background */
-    color: #000000 !important;             /* black text */
+    background-color: #00000 !important;  /* white background */
+    color: #fffff !important;             /* black text */
     font-weight: bold !important;
     border-radius: 10px !important;
     padding: 0.6em 1.4em !important;
