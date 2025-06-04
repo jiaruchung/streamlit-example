@@ -1,9 +1,9 @@
 import streamlit as st
-import openai
 import os
+from openai import OpenAI
 
 # --- SETUP ---
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Page config
 st.set_page_config(page_title="Persona UX Autorater", layout="centered")
@@ -11,38 +11,27 @@ st.set_page_config(page_title="Persona UX Autorater", layout="centered")
 # --- DARK THEME STYLING ---
 st.markdown("""
 <style>
-/* Background gradient */
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(to right, #0f0f0f, #1a1a1a);
     color: #f0f0f0;
 }
-
-/* Text styles */
 h1, h2, h3, h4, p, label {
     color: #f8f8f8 !important;
 }
-
-/* Text area & input */
 textarea, input, .stTextInput>div>div>input {
     background-color: #1e1e1e !important;
     color: #e0e0e0 !important;
 }
-
-/* Primary button */
 button[kind="primary"] {
     background-color: #ff4b4b !important;
     color: white !important;
     border-radius: 8px;
     font-weight: bold;
 }
-
-/* Link styling */
 a {
     color: #00bfff !important;
     font-weight: bold;
 }
-
-/* Padding adjustments */
 .css-18ni7ap.e8zbici2 {
     padding-top: 2rem;
 }
@@ -110,7 +99,7 @@ Evaluate this UX copy:
 # --- EVALUATION ---
 def get_feedback(ux_text, persona):
     prompt = build_prompt(ux_text, persona)
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a UX accessibility evaluation assistant."},
@@ -118,7 +107,7 @@ def get_feedback(ux_text, persona):
         ],
         temperature=0.4
     )
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content
 
 # --- RUN BUTTON ---
 if st.button("Run Autorater"):
@@ -136,6 +125,7 @@ st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a full accessibility audit with **PDF download**, persona comparisons, and design recommendations.")
 st.markdown("[💳 Buy Full Evaluation →](https://buy.stripe.com/test_xxx)", unsafe_allow_html=True)
+
 
 
 
