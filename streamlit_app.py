@@ -6,61 +6,95 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # --- Page Setup ---
-st.set_page_config(page_title="Persona UX Autorater", layout="centered")
+st.set_page_config(page_title="Persona UX Autorater", layout="wide")
 
-# --- Custom Dark Theme Styling + ✅ Button Fix ---
+# --- Custom Theme Styling ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(to right, #0f0f0f, #1a1a1a);
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
     color: #f0f0f0;
+    padding-top: 0 !important;
 }
-h1, h2, h3, h4, p, label {
-    color: #f8f8f8 !important;
+
+/* Header and text styling */
+h1, h2, h3, h4, h5, h6, p, label {
+    color: #ffffff !important;
 }
+
+/* Text input and text area */
 textarea, input, .stTextInput>div>div>input {
-    background-color: #1e1e1e !important;
+    background-color: #222 !important;
     color: #e0e0e0 !important;
+    border-radius: 10px;
+    border: 1px solid #444;
 }
+
+/* Buttons */
 div.stButton > button {
-    background-color: #1e1e1e !important;  /* white background */
-    color: #e0e0e0 !important;             /* black text */
-    font-weight: bold !important;
-    border-radius: 8px !important;
-    border: 1px solid #ccc !important;
-    padding: 0.6em 1.4em !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 0.7em 1.5em;
+    transition: 0.3s;
 }
 div.stButton > button:hover {
-    background-color: #e0e0e0 !important;
-    color: #1e1e1e !important;
-    border-color: #aaa !important;
+    background-color: #87CEEB !important;
+    color: #000000 !important;
 }
-a {
-    color: #00bfff !important;
+
+/* Buy button */
+a.buy-button {
+    display: inline-block;
+    background: #F08080;
+    color: white !important;
+    padding: 0.8em 1.6em;
     font-weight: bold;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.3s;
 }
-.css-18ni7ap.e8zbici2 {
-    padding-top: 2rem;
+a.buy-button:hover {
+    background: #e06c6c;
+}
+
+.persona-img {
+    border-radius: 50%;
+    height: 100px;
+    margin-right: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Title & Intro ---
+# --- Hero Section ---
+st.image("https://images.unsplash.com/photo-1581091215367-59fbb6a17d2d", use_column_width=True)
 st.title("👥 Persona-Based UX Autorater")
-st.subheader("Simulate accessibility feedback from diverse users before you ship.")
-st.markdown("Test your UX copy with AI-generated feedback from **neurodiverse and accessibility personas**.")
+st.subheader("Simulate accessibility feedback from diverse users — before you ship.")
+st.markdown("Test your UX copy using AI-generated feedback from **neurodiverse and accessibility personas**. Make your products more inclusive and user-friendly.")
 
 # --- Persona Overview ---
+st.markdown("### 💡 Supported Personas")
 st.markdown("""
-### 💡 Supported Personas
-
-| 👤 Persona | Description |
-|------------|-------------|
-| 🧠 **ADHD** | Easily distracted, overwhelmed by cluttered or vague text |
-| 🧩 **Autism** | Prefers clear, literal, structured, and emotionally neutral content |
-| 🌍 **ESL** | May struggle with idioms, slang, or overly complex grammar |
-| 👁️ **Low Vision** | Uses screen readers or magnifiers; prefers linear and concise layout |
-""")
+<table>
+<tr>
+  <td><img src="https://img.icons8.com/color/100/adhd.png" class="persona-img"></td>
+  <td>🧠 <b>ADHD</b><br>Easily distracted, overwhelmed by cluttered or vague text</td>
+</tr>
+<tr>
+  <td><img src="https://img.icons8.com/color/100/autism.png" class="persona-img"></td>
+  <td>🧩 <b>Autism</b><br>Prefers clear, literal, structured, and emotionally neutral content</td>
+</tr>
+<tr>
+  <td><img src="https://img.icons8.com/color/100/language.png" class="persona-img"></td>
+  <td>🌍 <b>ESL</b><br>May struggle with idioms, slang, or overly complex grammar</td>
+</tr>
+<tr>
+  <td><img src="https://img.icons8.com/color/100/visible.png" class="persona-img"></td>
+  <td>👁️ <b>Low Vision</b><br>Uses screen readers or magnifiers; prefers linear and concise layout</td>
+</tr>
+</table>
+""", unsafe_allow_html=True)
 
 # --- Persona Selector ---
 persona = st.selectbox("Choose a simulated user persona:", [
@@ -72,46 +106,21 @@ persona = st.selectbox("Choose a simulated user persona:", [
 
 # --- UX Input Section ---
 st.markdown("### 🎯 Try It Free")
-st.markdown("_Paste a message or microcopy that users will read in your product — for example, a confirmation message, tooltip, button label, or system alert._")
+st.markdown("_Paste microcopy that users will read — like a confirmation message, tooltip, or alert._")
 
 default_example = "Thanks! We’ve received your request. You’ll get a response shortly."
-
 ux_input = st.text_area("Enter your UX copy:", value=default_example, height=180)
 
 # --- Prompt Builder ---
 def build_prompt(ux_text, persona):
     prompts = {
-        "🧠 ADHD": f"""You are simulating feedback from a user with ADHD.
-Evaluate this UX copy:
-{ux_text}
+        "🧠 ADHD": f"""You are simulating feedback from a user with ADHD.\nEvaluate this UX copy:\n{ux_text}\n\n1. Does the language feel too fast, dense, or distracting?\n2. Is attention required to interpret? How could it be more direct?\n3. Suggestions to reduce cognitive load.""",
 
-1. Does the language feel too fast, dense, or distracting?
-2. Is attention required to interpret? How could it be more direct?
-3. Suggestions to reduce cognitive load.""",
+        "🧩 Autism": f"""You are simulating feedback from a user with autistic traits.\nEvaluate this UX copy:\n{ux_text}\n\n1. Is the tone overly casual or ambiguous?\n2. Are there any confusing phrases or vague timing?\n3. Suggestions for clarity, predictability, and directness.""",
 
-        "🧩 Autism": f"""You are simulating feedback from a user with autistic traits.
-Evaluate this UX copy:
-{ux_text}
+        "🌍 ESL (English as Second Language)": f"""You are simulating feedback from an ESL user.\nEvaluate this UX copy:\n{ux_text}\n\n1. Are there idioms, jargon, or complex phrasing?\n2. How simple is the vocabulary and grammar?\n3. Suggestions for clearer and easier-to-translate language.""",
 
-1. Is the tone overly casual or ambiguous?
-2. Are there any confusing phrases or vague timing?
-3. Suggestions for clarity, predictability, and directness.""",
-
-        "🌍 ESL (English as Second Language)": f"""You are simulating feedback from an ESL user.
-Evaluate this UX copy:
-{ux_text}
-
-1. Are there idioms, jargon, or complex phrasing?
-2. How simple is the vocabulary and grammar?
-3. Suggestions for clearer and easier-to-translate language.""",
-
-        "👁️ Vision-Impaired (Screen Reader)": f"""You are simulating feedback from a user relying on screen reader software.
-Evaluate this UX copy:
-{ux_text}
-
-1. Are there confusing word orders or redundant terms?
-2. Would this copy read aloud naturally and helpfully?
-3. Suggestions to make it more accessible for auditory processing."""
+        "👁️ Vision-Impaired (Screen Reader)": f"""You are simulating feedback from a user relying on screen reader software.\nEvaluate this UX copy:\n{ux_text}\n\n1. Are there confusing word orders or redundant terms?\n2. Would this copy read aloud naturally and helpfully?\n3. Suggestions to make it more accessible for auditory processing."""
     }
     return prompts[persona]
 
@@ -143,9 +152,10 @@ st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
 st.markdown(
-    "[💳 Buy Full Evaluation →](https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00)",
+    '<a class="buy-button" href="https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00">💳 Buy Full Evaluation →</a>',
     unsafe_allow_html=True
 )
+
 
 
 
