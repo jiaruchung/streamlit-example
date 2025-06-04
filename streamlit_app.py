@@ -2,13 +2,13 @@ import streamlit as st
 import os
 from openai import OpenAI
 
-# --- SETUP ---
+# --- OpenAI Client Setup ---
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Page config
+# --- Page Config ---
 st.set_page_config(page_title="Persona UX Autorater", layout="centered")
 
-# --- DARK THEME STYLING ---
+# --- Dark Theme Styling ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -38,12 +38,12 @@ a {
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER ---
+# --- Header ---
 st.title("👥 Persona-Based UX Autorater")
 st.subheader("Simulate accessibility feedback from diverse users before you ship.")
-st.markdown("Test your UX copy with simulated feedback from **neurodiverse and accessibility personas** using AI.")
+st.markdown("Test your UX copy with AI-generated feedback from **neurodiverse and accessibility personas**.")
 
-# --- PERSONA SELECTOR ---
+# --- Persona Selector ---
 persona = st.selectbox("Choose a simulated user persona:", [
     "🧠 ADHD",
     "🧩 Autism",
@@ -51,15 +51,15 @@ persona = st.selectbox("Choose a simulated user persona:", [
     "👁️ Vision-Impaired (Screen Reader)"
 ])
 
-# --- UX INPUT ---
+# --- UX Copy Input ---
 st.markdown("### 🎯 Try It Free")
 ux_input = st.text_area(
-    "Enter your UX copy below:",
+    "Enter your UX copy:",
     placeholder="Example: 'Thanks! We’ve received your request. You’ll get a response shortly.'",
     height=180
 )
 
-# --- PROMPT FACTORY ---
+# --- Prompt Builder ---
 def build_prompt(ux_text, persona):
     prompts = {
         "🧠 ADHD": f"""You are simulating feedback from a user with ADHD.
@@ -96,7 +96,7 @@ Evaluate this UX copy:
     }
     return prompts[persona]
 
-# --- EVALUATION ---
+# --- Feedback Function ---
 def get_feedback(ux_text, persona):
     prompt = build_prompt(ux_text, persona)
     response = client.chat.completions.create(
@@ -109,7 +109,7 @@ def get_feedback(ux_text, persona):
     )
     return response.choices[0].message.content
 
-# --- RUN BUTTON ---
+# --- Evaluate Button ---
 if st.button("Run Autorater"):
     if ux_input.strip():
         with st.spinner("Simulating feedback..."):
@@ -117,14 +117,17 @@ if st.button("Run Autorater"):
             st.markdown("### 📝 Simulated Feedback")
             st.text_area("Persona Feedback", feedback, height=300)
     else:
-        st.warning("Please enter your UX copy above.")
+        st.warning("Please enter UX copy first.")
 
+# --- Divider + CTA ---
 st.divider()
-
-# --- CTA TO PAID OPTION ---
 st.markdown("### 🔒 Want a full UX report?")
-st.markdown("Get a full accessibility audit with **PDF download**, persona comparisons, and design recommendations.")
-st.markdown("[💳 Buy Full Evaluation →](https://buy.stripe.com/test_xxx)", unsafe_allow_html=True)
+st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and design suggestions.")
+st.markdown(
+    "[💳 Buy Full Evaluation →](https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00)",
+    unsafe_allow_html=True
+)
+
 
 
 
