@@ -23,16 +23,17 @@ textarea, input, .stTextInput>div>div>input {
     color: #e0e0e0 !important;
 }
 div.stButton > button {
-    background-color: #ffffff !important;
-    color: #000000 !important;
+    background-color: #ffffff !important;  /* white background */
+    color: #000000 !important;             /* black text */
     font-weight: bold !important;
-    border-radius: 10px !important;
+    border-radius: 8px !important;
+    border: 1px solid #ccc !important;
     padding: 0.6em 1.4em !important;
-    border: none !important;
 }
 div.stButton > button:hover {
-    background-color: #f2f2f2 !important;
+    background-color: #f0f0f0 !important;
     color: #000000 !important;
+    border-color: #aaa !important;
 }
 a {
     color: #00bfff !important;
