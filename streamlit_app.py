@@ -1,13 +1,14 @@
 import streamlit as st
 import os
-import time
 from openai import OpenAI
 
-# --- Setup ---
+# --- OpenAI Setup ---
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-st.set_page_config(page_title="UX Autorater", layout="centered")
 
-# --- Dark Theme & Button Styling ---
+# --- Page Setup ---
+st.set_page_config(page_title="Persona UX Autorater", layout="centered")
+
+# --- Custom Dark Theme Styling ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -22,8 +23,8 @@ textarea, input, .stTextInput>div>div>input {
     color: #e0e0e0 !important;
 }
 button[kind="primary"] {
-    background-color: #ffffff !important;
-    color: black !important;
+    background-color: #ff4b4b !important;
+    color: white !important;
     border-radius: 8px;
     font-weight: bold;
 }
@@ -31,62 +32,89 @@ a {
     color: #00bfff !important;
     font-weight: bold;
 }
+.css-18ni7ap.e8zbici2 {
+    padding-top: 2rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Hero Illustration ---
-st.image("https://undraw.co/api/illustrations/8f110aa0-e9d6-4990-9cf7-850c6c91f0e1", use_column_width=True)
-
-# --- Title and Introduction ---
+# --- Title & Intro ---
 st.title("👥 Persona-Based UX Autorater")
-st.markdown("Test your UX copy with AI-generated feedback from neurodiverse and accessibility personas.")
+st.subheader("Simulate accessibility feedback from diverse users before you ship.")
+st.markdown("Test your UX copy with AI-generated feedback from **neurodiverse and accessibility personas**.")
 
-# --- Instructions & UX Copy Input ---
+# --- Persona Overview (Cute Icons) ---
+st.markdown("""
+### 💡 Supported Personas
+
+| 👤 Persona | Description |
+|------------|-------------|
+| 🧠 **ADHD** | Easily distracted, overwhelmed by cluttered or vague text |
+| 🧩 **Autism** | Prefers clear, literal, structured, and emotionally neutral content |
+| 🌍 **ESL** | May struggle with idioms, slang, or overly complex grammar |
+| 👁️ **Low Vision** | Uses screen readers or magnifiers; prefers linear and concise layout |
+""")
+
+# --- Persona Selector ---
+persona = st.selectbox("Choose a simulated user persona:", [
+    "🧠 ADHD",
+    "🧩 Autism",
+    "🌍 ESL (English as Second Language)",
+    "👁️ Vision-Impaired (Screen Reader)"
+])
+
+# --- UX Input Section ---
 st.markdown("### 🎯 Try It Free")
-st.markdown("_Enter product text like tooltips, confirmations, alerts, etc._")
-
-example = "Thanks! We’ve received your request. You’ll get a response shortly."
-ux_input = st.text_area("Enter your UX copy:", value=example, height=180)
-
-# --- Personas to Compare ---
-selected_personas = st.multiselect(
-    "Select personas to simulate feedback from:",
-    ["🧠 ADHD", "🧩 Autism", "🌍 ESL", "👁️ Vision-Impaired"],
-    default=["🧠 ADHD", "🌍 ESL"]
+st.markdown(
+    "_Paste a message or microcopy that users will read in your product — for example, a confirmation message, tooltip, button label, or system alert._"
 )
 
-# --- Build Prompt ---
+default_example = "Thanks! We’ve received your request. You’ll get a response shortly."
+
+ux_input = st.text_area(
+    "Enter your UX copy:",
+    value=default_example,
+    height=180
+)
+
+# --- Prompt Builder ---
 def build_prompt(ux_text, persona):
     prompts = {
         "🧠 ADHD": f"""You are simulating feedback from a user with ADHD.
-UX Copy:
+Evaluate this UX copy:
 {ux_text}
-Respond with cognitive load, attention challenge, and improvement suggestions.""",
+
+1. Does the language feel too fast, dense, or distracting?
+2. Is attention required to interpret? How could it be more direct?
+3. Suggestions to reduce cognitive load.""",
 
         "🧩 Autism": f"""You are simulating feedback from a user with autistic traits.
-UX Copy:
+Evaluate this UX copy:
 {ux_text}
-Comment on tone, clarity, predictability, and sensory comfort.""",
 
-        "🌍 ESL": f"""You are simulating feedback from an ESL user.
-UX Copy:
-{ux_text}
-Respond with feedback on language simplicity, grammar clarity, and translation friendliness.""",
+1. Is the tone overly casual or ambiguous?
+2. Are there any confusing phrases or vague timing?
+3. Suggestions for clarity, predictability, and directness.""",
 
-        "👁️ Vision-Impaired": f"""You are simulating feedback from a screen reader user.
-UX Copy:
+        "🌍 ESL (English as Second Language)": f"""You are simulating feedback from an ESL user.
+Evaluate this UX copy:
 {ux_text}
-Comment on audio clarity, accessibility of structure, and improvement tips."""
+
+1. Are there idioms, jargon, or complex phrasing?
+2. How simple is the vocabulary and grammar?
+3. Suggestions for clearer and easier-to-translate language.""",
+
+        "👁️ Vision-Impaired (Screen Reader)": f"""You are simulating feedback from a user relying on screen reader software.
+Evaluate this UX copy:
+{ux_text}
+
+1. Are there confusing word orders or redundant terms?
+2. Would this copy read aloud naturally and helpfully?
+3. Suggestions to make it more accessible for auditory processing."""
     }
     return prompts[persona]
 
-# --- Animated Typewriter Effect ---
-def typewriter(text):
-    for char in text:
-        st.markdown(f"<span style='font-size:16px'>{char}</span>", unsafe_allow_html=True)
-        time.sleep(0.01)
-
-# --- Get Feedback from OpenAI ---
+# --- Feedback Function ---
 def get_feedback(ux_text, persona):
     prompt = build_prompt(ux_text, persona)
     response = client.chat.completions.create(
@@ -99,28 +127,25 @@ def get_feedback(ux_text, persona):
     )
     return response.choices[0].message.content
 
-# --- Autorater Run ---
-if st.button("✨ Run Autorater"):
-    if ux_input.strip() and selected_personas:
-        st.markdown("### 📝 Simulated Feedback")
-        cols = st.columns(len(selected_personas))
-        for idx, persona in enumerate(selected_personas):
-            with cols[idx]:
-                st.markdown(f"**{persona}**")
-                with st.spinner(f"Analyzing {persona}..."):
-                    feedback = get_feedback(ux_input, persona)
-                    st.text_area("Feedback", feedback, height=250, key=persona)
+# --- Evaluation Button ---
+if st.button("Run Autorater"):
+    if ux_input.strip():
+        with st.spinner("Simulating feedback..."):
+            feedback = get_feedback(ux_input, persona)
+            st.markdown("### 📝 Simulated Feedback")
+            st.text_area("Persona Feedback", feedback, height=300)
     else:
-        st.warning("Please enter UX copy and select at least one persona.")
+        st.warning("Please enter UX copy first.")
 
-# --- Call to Action ---
+# --- CTA Section ---
 st.divider()
 st.markdown("### 🔒 Want a full UX report?")
-st.markdown("Get a downloadable PDF, expert suggestions, and persona comparison.")
+st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
 st.markdown(
     "[💳 Buy Full Evaluation →](https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00)",
     unsafe_allow_html=True
 )
+
 
 
 
