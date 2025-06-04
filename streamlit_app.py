@@ -28,11 +28,11 @@ div.stButton > button {
     font-weight: bold !important;
     border-radius: 10px !important;
     padding: 0.6em 1.4em !important;
-    border: 1px solid #cccccc !important;
+    border: 1px solid #00000 !important;
 }
 div.stButton > button:hover {
-    background-color: #f2f2f2 !important;
-    color: #000000 !important;
+    background-color: #00000!important;
+    color: #fffff !important;
 }
 a {
     color: #00bfff !important;
