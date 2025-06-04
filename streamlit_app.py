@@ -59,7 +59,7 @@ a.buy-button:hover {
 """, unsafe_allow_html=True)
 
 # --- Hero Section ---
-st.image("https://images.unsplash.com/photo-1581091215367-59fbb6a17d2d", use_container_width=True)
+#st.image("https://images.unsplash.com/photo-1581091215367-59fbb6a17d2d", use_container_width=True)
 st.title("👥 Persona-Based UX Autorater")
 st.subheader("Simulate accessibility feedback from diverse users — before you ship.")
 st.markdown("Test your UX copy using AI-generated feedback from **neurodiverse and accessibility personas**. Make your products more inclusive and user-friendly.")
