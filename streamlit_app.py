@@ -43,6 +43,18 @@ st.title("👥 Persona-Based UX Autorater")
 st.subheader("Simulate accessibility feedback from diverse users before you ship.")
 st.markdown("Test your UX copy with AI-generated feedback from **neurodiverse and accessibility personas**.")
 
+# --- Persona Overview (Cute Icons) ---
+st.markdown("""
+### 💡 Supported Personas
+
+| 👤 Persona | Description |
+|------------|-------------|
+| 🧠 **ADHD** | Easily distracted, overwhelmed by cluttered or vague text |
+| 🧩 **Autism** | Prefers clear, literal, structured, and emotionally neutral content |
+| 🌍 **ESL** | May struggle with idioms, slang, or overly complex grammar |
+| 👁️ **Low Vision** | Uses screen readers or magnifiers; prefers linear and concise layout |
+""")
+
 # --- Persona Selector ---
 persona = st.selectbox("Choose a simulated user persona:", [
     "🧠 ADHD",
@@ -125,7 +137,7 @@ if st.button("Run Autorater"):
     else:
         st.warning("Please enter UX copy first.")
 
-# --- Call to Action ---
+# --- CTA Section ---
 st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
@@ -133,6 +145,7 @@ st.markdown(
     "[💳 Buy Full Evaluation →](https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00)",
     unsafe_allow_html=True
 )
+
 
 
 
