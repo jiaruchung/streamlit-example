@@ -32,7 +32,7 @@ div.stButton > button {
 }
 div.stButton > button:hover {
     background-color: #f0f0f0 !important;
-    color: #000000 !important;
+    color: #1e1e1e !important;
     border-color: #aaa !important;
 }
 a {
