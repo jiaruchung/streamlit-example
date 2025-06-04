@@ -2,13 +2,13 @@ import streamlit as st
 import os
 from openai import OpenAI
 
-# --- OpenAI Client Setup ---
+# --- OpenAI Setup ---
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# --- Page Config ---
+# --- Page Setup ---
 st.set_page_config(page_title="Persona UX Autorater", layout="centered")
 
-# --- Dark Theme Styling ---
+# --- Custom Dark Theme Styling ---
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -38,7 +38,7 @@ a {
 </style>
 """, unsafe_allow_html=True)
 
-# --- Header ---
+# --- Title & Intro ---
 st.title("👥 Persona-Based UX Autorater")
 st.subheader("Simulate accessibility feedback from diverse users before you ship.")
 st.markdown("Test your UX copy with AI-generated feedback from **neurodiverse and accessibility personas**.")
@@ -51,11 +51,17 @@ persona = st.selectbox("Choose a simulated user persona:", [
     "👁️ Vision-Impaired (Screen Reader)"
 ])
 
-# --- UX Copy Input ---
+# --- UX Input Section ---
 st.markdown("### 🎯 Try It Free")
+st.markdown(
+    "_Paste a message or microcopy that users will read in your product — for example, a confirmation message, tooltip, button label, or system alert._"
+)
+
+default_example = "Thanks! We’ve received your request. You’ll get a response shortly."
+
 ux_input = st.text_area(
     "Enter your UX copy:",
-    placeholder="Example: 'Thanks! We’ve received your request. You’ll get a response shortly.'",
+    value=default_example,
     height=180
 )
 
@@ -109,7 +115,7 @@ def get_feedback(ux_text, persona):
     )
     return response.choices[0].message.content
 
-# --- Evaluate Button ---
+# --- Evaluation Button ---
 if st.button("Run Autorater"):
     if ux_input.strip():
         with st.spinner("Simulating feedback..."):
@@ -119,14 +125,15 @@ if st.button("Run Autorater"):
     else:
         st.warning("Please enter UX copy first.")
 
-# --- Divider + CTA ---
+# --- Call to Action ---
 st.divider()
 st.markdown("### 🔒 Want a full UX report?")
-st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and design suggestions.")
+st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
 st.markdown(
     "[💳 Buy Full Evaluation →](https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00)",
     unsafe_allow_html=True
 )
+
 
 
 
