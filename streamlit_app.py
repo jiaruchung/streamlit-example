@@ -22,11 +22,16 @@ textarea, input, .stTextInput>div>div>input {
     background-color: #1e1e1e !important;
     color: #e0e0e0 !important;
 }
-button[kind="primary"] {
-    background-color: #000000 !important;
-    color: #ffffff !important;
+div.stButton > button {
+    background-color: #ffffff !important;
+    color: #000000 !important;
     border-radius: 8px;
     font-weight: bold;
+    padding: 0.6em 1.2em;
+}
+div.stButton > button:hover {
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;
 }
 a {
     color: #00bfff !important;
