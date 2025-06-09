@@ -11,5 +11,12 @@ sendgrid
 weasyprint   # or reportlab for PDF generation
 stripe
 reportlab
+fastapi==0.110.2
+uvicorn==0.29.0
+openai==1.14.3
+fpdf==1.7.2
+sendgrid==6.11.0
+python-dotenv==1.0.1
+stripe==9.6.0
 
 
