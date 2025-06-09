@@ -9,4 +9,5 @@ uvicorn
 python-dotenv
 sendgrid
 weasyprint   # or reportlab for PDF generation
+stripe
 
