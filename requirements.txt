@@ -4,3 +4,9 @@ streamlit
 openai
 openai>=1.0.0
 uvicorn[standard]
+fastapi
+uvicorn
+python-dotenv
+sendgrid
+weasyprint   # or reportlab for PDF generation
+
