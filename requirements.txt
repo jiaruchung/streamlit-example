@@ -2,7 +2,6 @@ altair
 pandas
 streamlit
 openai
-openai>=1.0.0
 uvicorn[standard]
 fastapi
 uvicorn
@@ -13,7 +12,7 @@ stripe
 reportlab
 fastapi==0.110.2
 uvicorn==0.29.0
-openai==1.14.3
+openai>=1.2.3
 fpdf==1.7.2
 sendgrid==6.11.0
 python-dotenv==1.0.1
