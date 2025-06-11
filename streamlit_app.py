@@ -166,7 +166,7 @@ st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
 st.markdown(
-    '<a class="buy-button" href="https://buy.stripe.com/test_8x26oJc9VdbLgM7eMN6EU00">💳 Buy Full Evaluation →</a>',
+    '<a class="buy-button" href="https://buy.stripe.com/test_eVq4gy4UI6If01Le8odQQ00">💳 Buy Full Evaluation →</a>',
     unsafe_allow_html=True
 )
 
