@@ -39,18 +39,21 @@ def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
 
 def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
     sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
+    
     with open(filename, "rb") as f:
-        data = f.read()
-        encoded = base64.b64encode(data).decode()
+        pdf_data = f.read()
+    
+    encoded_pdf = base64.b64encode(pdf_data).decode()
 
     message = Mail(
-        from_email="your@email.com",
+        from_email="your@email.com",  # Replace with a verified sender
         to_emails=recipient_email,
         subject="Your UX Autorater Full Report",
-        html_content="Thanks for purchasing! Your full UX feedback report is attached."
+        html_content="Thanks for your purchase! Your full UX feedback report is attached."
     )
+
     message.attachment = Attachment(
-        FileContent(encoded),
+        FileContent(encoded_pdf),
         FileName(filename),
         FileType("application/pdf"),
         Disposition("attachment")
