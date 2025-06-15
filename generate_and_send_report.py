@@ -4,6 +4,7 @@ from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileT
 import base64
 import os
 
+# Generates persona-specific feedback using OpenAI client
 def generate_persona_feedback(client, ux_text, persona):
     persona_prompt = build_prompt(ux_text, persona)
     response = client.chat.completions.create(
@@ -16,6 +17,7 @@ def generate_persona_feedback(client, ux_text, persona):
     )
     return response.choices[0].message.content.strip()
 
+# Generates a PDF report of the UX feedback
 def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
     pdf = FPDF()
     pdf.add_page()
@@ -36,17 +38,19 @@ def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
         pdf.ln()
 
     pdf.output(filename)
+    print(f"[✓] PDF generated: {filename}")
 
+# Sends the PDF report via email using SendGrid
 def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
     sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
-    
+
     with open(filename, "rb") as f:
         pdf_data = f.read()
-    
+
     encoded_pdf = base64.b64encode(pdf_data).decode()
 
     message = Mail(
-        from_email="your@email.com",  # Replace with a verified sender
+        from_email="verified@yourdomain.com",  # ✅ Replace with verified sender address
         to_emails=recipient_email,
         subject="Your UX Autorater Full Report",
         html_content="Thanks for your purchase! Your full UX feedback report is attached."
@@ -59,13 +63,27 @@ def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
         Disposition("attachment")
     )
 
-    sg.send(message)
+    try:
+        response = sg.send(message)
+        print(f"[✓] Email sent to {recipient_email} with status {response.status_code}")
+    except Exception as e:
+        print("[✗] Error sending email:", e)
 
+# Main function: generates persona feedbacks, PDF, and sends report
 def generate_and_send_report(client, ux_text, email, personas):
+    print(f"[→] Generating feedback for: {email}")
     feedbacks = {}
     for persona in personas:
-        feedbacks[persona] = generate_persona_feedback(client, ux_text, persona)
+        feedback = generate_persona_feedback(client, ux_text, persona)
+        feedbacks[persona] = feedback
+        print(f"[✓] Feedback generated for {persona}")
 
     filename = f"UX_Report_{email.replace('@', '_')}.pdf"
     generate_pdf_report(ux_text, feedbacks, filename)
     send_email_with_pdf(email, filename)
+
+    # Optional: cleanup temp file
+    if os.path.exists(filename):
+        os.remove(filename)
+        print(f"[✓] Temp file deleted: {filename}")
+
