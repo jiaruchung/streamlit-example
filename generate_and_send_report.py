@@ -1,7 +1,6 @@
 from fpdf import FPDF
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
-import base64
+import smtplib
+from email.message import EmailMessage
 import os
 
 # Generates persona-specific feedback using OpenAI client
@@ -40,36 +39,31 @@ def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
     pdf.output(filename)
     print(f"[✓] PDF generated: {filename}")
 
-# Sends the PDF report via email using SendGrid
+# Sends the PDF report via Gmail
 def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
-    sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
+    sender_email = "your_email@gmail.com"  # ✅ Replace with your Gmail
+    app_password = os.getenv("GMAIL_APP_PASSWORD")  # ✅ Store in Streamlit secrets or environment
 
-    with open(filename, "rb") as f:
-        pdf_data = f.read()
+    msg = EmailMessage()
+    msg['Subject'] = 'Your UX Autorater Full Report'
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+    msg.set_content("Thanks for your purchase! Your full UX feedback report is attached.")
 
-    encoded_pdf = base64.b64encode(pdf_data).decode()
-
-    message = Mail(
-        from_email="verified@yourdomain.com",  # ✅ Replace with verified sender address
-        to_emails=recipient_email,
-        subject="Your UX Autorater Full Report",
-        html_content="Thanks for your purchase! Your full UX feedback report is attached."
-    )
-
-    message.attachment = Attachment(
-        FileContent(encoded_pdf),
-        FileName(filename),
-        FileType("application/pdf"),
-        Disposition("attachment")
-    )
+    # Attach the PDF
+    with open(filename, 'rb') as f:
+        file_data = f.read()
+        msg.add_attachment(file_data, maintype='application', subtype='pdf', filename=filename)
 
     try:
-        response = sg.send(message)
-        print(f"[✓] Email sent to {recipient_email} with status {response.status_code}")
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, app_password)
+            smtp.send_message(msg)
+        print(f"[✓] Email sent to {recipient_email}")
     except Exception as e:
-        print("[✗] Error sending email:", e)
+        print("[✗] Failed to send email:", e)
 
-# Main function: generates persona feedbacks, PDF, and sends report
+# Main function to generate and send the UX report
 def generate_and_send_report(client, ux_text, email, personas):
     print(f"[→] Generating feedback for: {email}")
     feedbacks = {}
@@ -82,8 +76,9 @@ def generate_and_send_report(client, ux_text, email, personas):
     generate_pdf_report(ux_text, feedbacks, filename)
     send_email_with_pdf(email, filename)
 
-    # Optional: cleanup temp file
+    # Optional cleanup
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
