@@ -1,4 +1,5 @@
 import os
+import json
 import stripe
 from fastapi import FastAPI, Request, HTTPException
 from dotenv import load_dotenv
@@ -28,9 +29,19 @@ async def stripe_webhook(request: Request):
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
+    print("🚨 Stripe webhook received")
+    print("[DEBUG] Event type:", event["type"])
+
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        customer_email = session["customer_details"]["email"]
+
+        # ✅ Safe fallback in case customer_details is missing
+        customer_email = (
+            session.get("customer_details", {}).get("email") or
+            session.get("customer_email") or
+            "fallback@example.com"
+        )
+
         print(f"✅ Payment received from: {customer_email}")
 
         # Generate and send report
@@ -73,5 +84,6 @@ def generate_and_send_report(email):
         print(f"📬 Report sent to {email}")
     except Exception as e:
         print(f"❌ Failed to send email: {e}")
+
 
 
