@@ -41,8 +41,8 @@ def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
 
 # Sends the PDF report via Gmail
 def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
-    sender_email = "your_email@gmail.com"  # ✅ Replace with your Gmail
-    app_password = os.getenv("GMAIL_APP_PASSWORD")  # ✅ Store in Streamlit secrets or environment
+    sender_email = "jc55248@gmail.com"  # ✅ Replace with your Gmail
+    app_password = os.getenv("GMAIL_APP_PASSWORD")  # ✅ Securely load app password
 
     msg = EmailMessage()
     msg['Subject'] = 'Your UX Autorater Full Report'
@@ -80,5 +80,6 @@ def generate_and_send_report(client, ux_text, email, personas):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
