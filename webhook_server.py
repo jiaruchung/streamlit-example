@@ -1,79 +1,100 @@
 import os
 import stripe
-import openai
 from fastapi import FastAPI, Request, HTTPException
 from dotenv import load_dotenv
 from fpdf import FPDF
 import smtplib
 from email.message import EmailMessage
+from openai import OpenAI
 
-# Load environment variables from .env file
+# --- Load environment variables ---
 load_dotenv()
-
-# Stripe + OpenAI + Gmail credentials
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-openai.api_key = os.getenv("OPENAI_API_KEY")
-SENDER_EMAIL = "jc55248@gmail.com"  # ✅ Your Gmail
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+SENDER_EMAIL = "jc55248@gmail.com"  # 🔒 use your Gmail address
+
+# --- OpenAI client ---
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# --- FastAPI setup ---
 app = FastAPI()
 
-# 🔍 AI function to generate feedback
-def generate_ux_feedback(ux_text):
-    system_prompt = "You are a senior UX researcher generating an evaluation report based on user-facing copy."
-    user_prompt = f"""Evaluate the following UX copy:
 
-\"{ux_text}\"
+@app.post("/webhook")
+async def stripe_webhook(request: Request):
+    print("🚨 Stripe webhook called")
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
 
-Provide:
-- A clarity score (out of 5) and explanation
-- A cognitive load score (out of 5) and explanation
-- Readability analysis (e.g., grade level)
-- Suggestions for improvement (bullet list)
-"""
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        temperature=0.5
-    )
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        customer_email = session["customer_details"]["email"]
+        print(f"✅ Payment received from: {customer_email}")
+        generate_and_send_report(customer_email)
 
-    return response['choices'][0]['message']['content']
+    return {"status": "ok"}
 
-# 🖨 PDF and email generation
-def generate_and_send_report(email, ux_text="Thank you for signing up. You will receive an email shortly."):
+
+def generate_persona_feedback(client, ux_text, persona):
+    prompt = f"You are a UX evaluation assistant for the persona: {persona}.\n\nEvaluate the following UX text:\n\n{ux_text}\n\nGive a detailed evaluation of its accessibility, clarity, tone, and design suggestions from the perspective of {persona}."
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a UX accessibility evaluation assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"❌ OpenAI error: {e}")
+        return "OpenAI feedback generation failed."
+
+
+def generate_and_send_report(email):
     print(f"📄 Generating report for {email}...")
 
-    # 1. AI-generated content
-    ai_feedback = generate_ux_feedback(ux_text)
+    ux_text = "Example UX copy the user submitted for review."  # Replace with real input
+    personas = ["Visually Impaired User", "Senior User", "Mobile-Only User"]
 
-    # 2. PDF creation
+    # --- Generate feedback per persona ---
+    feedbacks = {}
+    for persona in personas:
+        feedbacks[persona] = generate_persona_feedback(client, ux_text, persona)
+
+    # --- Create PDF ---
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, "UX Autorater – Full Report", align="C")
+    pdf.cell(200, 10, txt="UX Autorater Full Report", ln=True, align="C")
+    pdf.ln()
+    pdf.set_font("Arial", size=11)
+    pdf.multi_cell(0, 10, f"Evaluated UX Copy:\n{ux_text}")
     pdf.ln()
 
-    pdf.set_font("Arial", 'B', size=12)
-    pdf.cell(0, 10, "Evaluated UX Copy:", ln=True)
-    pdf.set_font("Arial", size=11)
-    pdf.multi_cell(0, 10, ux_text)
-    pdf.ln()
+    for persona, feedback in feedbacks.items():
+        pdf.set_font("Arial", 'B', size=12)
+        pdf.cell(0, 10, f"\n{persona}", ln=True)
+        pdf.set_font("Arial", size=11)
+        pdf.multi_cell(0, 10, feedback)
+        pdf.ln()
 
-    pdf.set_font("Arial", 'B', size=12)
-    pdf.cell(0, 10, "AI-Generated Feedback:", ln=True)
-    pdf.set_font("Arial", size=11)
-    pdf.multi_cell(0, 10, ai_feedback)
     pdf.output("report.pdf")
     print("[✓] PDF report created")
 
-    # 3. Email via Gmail
+    # --- Send via Gmail ---
     if not GMAIL_APP_PASSWORD:
-        print("❌ GMAIL_APP_PASSWORD not set. Cannot send email.")
+        print("❌ GMAIL_APP_PASSWORD not set")
         return
 
     msg = EmailMessage()
@@ -94,29 +115,6 @@ def generate_and_send_report(email, ux_text="Thank you for signing up. You will 
     except Exception as e:
         print(f"❌ Failed to send email: {e}")
 
-# 🌐 Stripe webhook endpoint
-@app.post("/webhook")
-async def stripe_webhook(request: Request):
-    print("🚨 Stripe webhook called")
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
-
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        customer_email = session["customer_details"]["email"]
-        print(f"✅ Payment received from: {customer_email}")
-
-        # You can dynamically replace this text if collected from user
-        ux_text = "Thank you for signing up. You will receive an email shortly."
-
-        generate_and_send_report(customer_email, ux_text)
-
-    return {"status": "ok"}
 
 
 
