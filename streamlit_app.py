@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+print("🔐 DEBUG OPENAI_API_KEY =", os.getenv("OPENAI_API_KEY"))
+
 # --- OpenAI Setup ---
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -172,8 +174,6 @@ st.markdown(
     '<a class="buy-button" href="https://buy.stripe.com/test_eVq4gy4UI6If01Le8odQQ00">💳 Buy Full Evaluation →</a>',
     unsafe_allow_html=True
 )
-
-print("🔑 OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
 
 
 
