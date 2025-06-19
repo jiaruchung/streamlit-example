@@ -170,8 +170,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
-
+print("🔑 OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
 
 
 
