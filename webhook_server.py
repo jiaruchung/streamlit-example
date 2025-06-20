@@ -14,6 +14,11 @@ load_dotenv()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
 openai_api_key = os.getenv("OPENAI_API_KEY")
+print("[DEBUG] OPENAI_API_KEY loaded:", bool(os.getenv("OPENAI_API_KEY")))
+print("[DEBUG] GMAIL_APP_PASSWORD loaded:", bool(os.getenv("GMAIL_APP_PASSWORD")))
+print("[DEBUG] STRIPE_SECRET_KEY loaded:", bool(os.getenv("STRIPE_SECRET_KEY")))
+print("[DEBUG] STRIPE_WEBHOOK_SECRET loaded:", bool(os.getenv("STRIPE_WEBHOOK_SECRET")))
+print("[DEBUG] SENDER_EMAIL loaded:", os.getenv("SENDER_EMAIL"))
 
 # Gmail credentials
 SENDER_EMAIL = "jc55248@gmail.com"
