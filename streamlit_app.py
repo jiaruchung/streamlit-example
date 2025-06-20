@@ -113,7 +113,6 @@ Evaluate this UX copy:
 1. Does the language feel too fast, dense, or distracting?
 2. Is attention required to interpret? How could it be more direct?
 3. Suggestions to reduce cognitive load."""
-    
     elif persona == "🧩 Autism":
         return f"""You are simulating feedback from a user with autistic traits.
 Evaluate this UX copy:
@@ -122,7 +121,6 @@ Evaluate this UX copy:
 1. Is the tone overly casual or ambiguous?
 2. Are there any confusing phrases or vague timing?
 3. Suggestions for clarity, predictability, and directness."""
-    
     elif persona == "🌍 ESL (English as Second Language)":
         return f"""You are simulating feedback from an ESL user.
 Evaluate this UX copy:
@@ -131,7 +129,6 @@ Evaluate this UX copy:
 1. Are there idioms, jargon, or complex phrasing?
 2. How simple is the vocabulary and grammar?
 3. Suggestions for clearer and easier-to-translate language."""
-    
     elif persona == "👁️ Vision-Impaired (Screen Reader)":
         return f"""You are simulating feedback from a user relying on screen reader software.
 Evaluate this UX copy:
@@ -164,7 +161,7 @@ if st.button("Run Autorater"):
     else:
         st.warning("Please enter UX copy first.")
 
-# Stripe CTA for full report
+# Stripe CTA
 st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
@@ -187,16 +184,16 @@ if st.button("💳 Buy Full Evaluation"):
                     "persona": persona,
                     "ux_input": ux_input
                 })
-            
+
                 # DEBUG log
                 st.code(f"Status code: {res.status_code}\nResponse text:\n{res.text}")
-            
+
                 try:
                     data = res.json()
                     checkout_url = data.get("checkout_url")
                 except ValueError:
-                st.error("Server response was not valid JSON.")
-                checkout_url = None
+                    st.error("Server response was not valid JSON.")
+                    checkout_url = None
 
                 if checkout_url:
                     st.success("Redirecting to Stripe...")
@@ -205,6 +202,7 @@ if st.button("💳 Buy Full Evaluation"):
                     st.error("Failed to create checkout session.")
             except Exception as e:
                 st.error(f"Error: {e}")
+
 
 
 
