@@ -59,7 +59,7 @@ st.markdown("Get a complete accessibility audit including PDF download via email
 if st.button("💳 Buy Full Evaluation →"):
     if ux_input.strip():
         with st.spinner("Creating checkout session..."):
-            res = requests.post("http://localhost:8000/create_checkout_session", json={
+            res = requests.post("https://streamlit-example-1-dwdp.onrender.com/create_checkout_session", json={
                 "persona": persona,
                 "ux_input": ux_input
             })
