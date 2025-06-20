@@ -42,7 +42,7 @@ def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
 
 def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
     print(f"[→] Preparing to send email to: {recipient_email}")
-    sender_email = "your_email@gmail.com"  # Replace with your Gmail
+    sender_email = "jc55248@gmail.com"  # Replace with your Gmail
     app_password = os.getenv("GMAIL_APP_PASSWORD")
 
     if not app_password:
