@@ -1,122 +1,126 @@
 import os
 import stripe
 from openai import OpenAI
-from fastapi import FastAPI, Request, HTTPException
-from dotenv import load_dotenv
 from fpdf import FPDF
 import smtplib
 from email.message import EmailMessage
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-# Load environment variables
+# Load environment
 load_dotenv()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
 openai_api_key = os.getenv("OPENAI_API_KEY")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")
+gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
+sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")
 
-# FastAPI app
+client = OpenAI(api_key=openai_api_key)
+
+# FastAPI setup
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-async def root():
-    return {"message": "✅ FastAPI server is running!"}
+class CheckoutRequest(BaseModel):
+    persona: str
+    ux_input: str
+
+@app.post("/create_checkout_session")
+async def create_checkout_session(data: CheckoutRequest):
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{
+            "price": "your_price_id_here",  # Replace with your real Stripe price ID
+            "quantity": 1,
+        }],
+        mode="payment",
+        success_url="http://localhost:8501?success=true",
+        cancel_url="http://localhost:8501?cancelled=true",
+        metadata={
+            "persona": data.persona,
+            "ux_input": data.ux_input
+        }
+    )
+    return {"checkout_url": session.url}
 
 @app.post("/webhook")
 async def stripe_webhook(request: Request):
-    print("🚨 Webhook triggered")
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
-
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-        print(f"✅ Stripe event type: {event['type']}")
-    except stripe.error.SignatureVerificationError as e:
-        print(f"❌ Signature verification failed: {e}")
-        raise HTTPException(status_code=400, detail="Invalid Stripe signature")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
 
     if event["type"] == "checkout.session.completed":
-        print("🎯 Handling checkout.session.completed")
         session = event["data"]["object"]
-        customer_email = session.get("customer_details", {}).get("email")
-        if not customer_email:
-            print("❌ No customer email found")
-            return {"status": "no email found"}
-        
-        print(f"📧 Email: {customer_email}")
-        generate_and_send_report(customer_email)
-    else:
-        print(f"ℹ️ Unhandled event type: {event['type']}")
+        email = session["customer_details"]["email"]
+        persona = session["metadata"].get("persona")
+        ux_input = session["metadata"].get("ux_input")
+        generate_and_send_report(email, persona, ux_input)
 
     return {"status": "ok"}
 
-def generate_and_send_report(email):
-    print(f"📄 Generating report for {email}")
+def generate_and_send_report(email, persona, ux_input):
+    print(f"[→] Generating report for: {email} ({persona})")
 
-    # 1. OpenAI Feedback
     prompt = (
-        "You are a professional UX researcher. Analyze the following user interaction data or feedback "
-        "and generate a structured UX report.\n\n"
-        "Provide a brief summary (Clarity, Cognitive Load, Personalization), followed by specific actionable suggestions.\n"
-        "Keep the language professional, but accessible.\n\n"
-        "Example data: 'User attempted to complete checkout but dropped off on payment screen due to unclear instructions and overloaded UI elements.'"
+        f"You are a professional UX researcher specializing in {persona}.\n\n"
+        "Analyze the following UX copy and generate a structured report "
+        "with a brief summary (Clarity, Cognitive Load, Personalization), "
+        "followed by actionable suggestions.\n\n"
+        f"UX Copy: {ux_input}"
     )
 
     try:
-        client = OpenAI(api_key=openai_api_key)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
         ux_feedback = response.choices[0].message.content.strip()
-        print("🧠 OpenAI feedback generated")
     except Exception as e:
-        print(f"❌ OpenAI request failed: {e}")
-        ux_feedback = "Could not generate feedback due to an error."
+        ux_feedback = f"(Error generating feedback: {e})"
 
-    # 2. Generate PDF
     filename = f"UX_Report_{email.replace('@', '_')}.pdf"
-    try:
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
-        pdf.ln()
-        pdf.set_font("Arial", size=11)
-        pdf.multi_cell(0, 10, ux_feedback)
-        pdf.output(filename)
-        print(f"[✓] PDF report saved: {filename}")
-    except Exception as e:
-        print(f"❌ Failed to create PDF: {e}")
-        return
-
-    # 3. Email it
-    if not GMAIL_APP_PASSWORD:
-        print("❌ GMAIL_APP_PASSWORD not set. Cannot send email.")
-        return
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
+    pdf.ln()
+    pdf.multi_cell(0, 10, f"Persona: {persona}")
+    pdf.ln()
+    pdf.multi_cell(0, 10, f"UX Input:\n{ux_input}")
+    pdf.ln()
+    pdf.multi_cell(0, 10, f"Feedback:\n{ux_feedback}")
+    pdf.output(filename)
 
     msg = EmailMessage()
-    msg["Subject"] = "Your UX Autorater Full Report"
-    msg["From"] = SENDER_EMAIL
+    msg["Subject"] = "Your UX Autorater Report"
+    msg["From"] = sender_email
     msg["To"] = email
-    msg.set_content("Thanks for your purchase! Your UX feedback report is attached.")
+    msg.set_content("Thanks for your payment! Your UX report is attached.")
+
+    with open(filename, "rb") as f:
+        msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=filename)
 
     try:
-        with open(filename, "rb") as f:
-            msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename="UX_Report.pdf")
-
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(SENDER_EMAIL, GMAIL_APP_PASSWORD)
+            smtp.login(sender_email, gmail_app_password)
             smtp.send_message(msg)
-
-        print(f"📬 Report emailed to {email}")
+        print(f"[✓] Email sent to {email}")
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+        print(f"[✗] Failed to send email: {e}")
 
-    # 4. Cleanup
     if os.path.exists(filename):
         os.remove(filename)
-        print(f"🧹 Temp file deleted: {filename}")
+
 
 
 
