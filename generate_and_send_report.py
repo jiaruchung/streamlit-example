@@ -11,6 +11,12 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
 sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")  # default fallback
 
+print("[DEBUG] OPENAI_API_KEY loaded:", bool(os.getenv("OPENAI_API_KEY")))
+print("[DEBUG] GMAIL_APP_PASSWORD loaded:", bool(os.getenv("GMAIL_APP_PASSWORD")))
+print("[DEBUG] STRIPE_SECRET_KEY loaded:", bool(os.getenv("STRIPE_SECRET_KEY")))
+print("[DEBUG] STRIPE_WEBHOOK_SECRET loaded:", bool(os.getenv("STRIPE_WEBHOOK_SECRET")))
+print("[DEBUG] SENDER_EMAIL loaded:", os.getenv("SENDER_EMAIL"))
+
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
 
