@@ -187,7 +187,17 @@ if st.button("💳 Buy Full Evaluation"):
                     "persona": persona,
                     "ux_input": ux_input
                 })
-                checkout_url = res.json().get("checkout_url")
+            
+                # DEBUG log
+                st.code(f"Status code: {res.status_code}\nResponse text:\n{res.text}")
+            
+                try:
+                    data = res.json()
+                    checkout_url = data.get("checkout_url")
+    except ValueError:
+        st.error("Server response was not valid JSON.")
+        checkout_url = None
+
                 if checkout_url:
                     st.success("Redirecting to Stripe...")
                     st.markdown(f'<a href="{checkout_url}" target="_blank" class="buy-button">Proceed to Payment</a>', unsafe_allow_html=True)
