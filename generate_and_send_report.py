@@ -1,95 +1,89 @@
+import os
+from openai import OpenAI
 from fpdf import FPDF
 import smtplib
 from email.message import EmailMessage
-import os
+from dotenv import load_dotenv
 
-def generate_persona_feedback(client, ux_text, persona):
-    print(f"[→] Generating feedback for persona: {persona}")
-    persona_prompt = build_prompt(ux_text, persona)
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a UX accessibility evaluation assistant."},
-            {"role": "user", "content": persona_prompt}
-        ],
-        temperature=0.4
+# Load environment variables
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
+sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")  # default fallback
+
+# Initialize OpenAI client
+client = OpenAI(api_key=openai_api_key)
+
+def generate_and_send_report(email, persona, ux_input):
+    print(f"[→] Starting report generation for: {email} | Persona: {persona}")
+
+    # --- 1. Generate UX Feedback via OpenAI ---
+    prompt = (
+        f"You are a professional UX researcher specializing in {persona}.\n\n"
+        "Analyze the following user interaction data or feedback and generate a structured UX report.\n"
+        "Provide a brief summary (Clarity, Cognitive Load, Personalization), followed by specific actionable suggestions.\n"
+        "Keep the language professional, but accessible.\n\n"
+        f"User input: '{ux_input}'"
     )
-    feedback = response.choices[0].message.content.strip()
-    print(f"[✓] Feedback for {persona} generated")
-    return feedback
 
-def generate_pdf_report(ux_text, persona_feedbacks, filename="UX_Report.pdf"):
-    print(f"[→] Generating PDF report: {filename}")
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, "UX Autorater – Full Report", align="C")
-    pdf.ln()
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        ux_feedback = response.choices[0].message.content.strip()
+        print("[✓] OpenAI feedback generated")
+    except Exception as e:
+        print(f"[✗] Failed to generate feedback from OpenAI: {e}")
+        ux_feedback = "Could not generate feedback due to an error."
 
-    pdf.set_font("Arial", size=11)
-    pdf.multi_cell(0, 10, f"Evaluated UX Copy:\n{ux_text}")
-    pdf.ln()
-
-    for persona, feedback in persona_feedbacks.items():
-        pdf.set_font("Arial", 'B', size=12)
-        pdf.cell(0, 10, f"\n{persona}", ln=True)
-        pdf.set_font("Arial", size=11)
-        pdf.multi_cell(0, 10, feedback)
+    # --- 2. Generate PDF Report ---
+    filename = f"UX_Report_{email.replace('@', '_')}.pdf"
+    try:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
         pdf.ln()
-
-    pdf.output(filename)
-    print(f"[✓] PDF saved: {filename} (exists? {os.path.exists(filename)})")
-
-def send_email_with_pdf(recipient_email, filename="UX_Report.pdf"):
-    print(f"[→] Preparing to send email to: {recipient_email}")
-    sender_email = "jc55248@gmail.com"  # Replace with your Gmail
-    app_password = os.getenv("GMAIL_APP_PASSWORD")
-
-    if not app_password:
-        print("[✗] ERROR: Missing Gmail app password from environment variable.")
+        pdf.set_font("Arial", size=11)
+        pdf.multi_cell(0, 10, f"Persona: {persona}")
+        pdf.ln()
+        pdf.multi_cell(0, 10, f"User Input:\n{ux_input}")
+        pdf.ln()
+        pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{ux_feedback}")
+        pdf.output(filename)
+        print(f"[✓] PDF report saved as: {filename}")
+    except Exception as e:
+        print(f"[✗] Failed to generate PDF: {e}")
         return
 
-    if not os.path.exists(filename):
-        print(f"[✗] ERROR: Attachment not found: {filename}")
+    # --- 3. Email the Report ---
+    if not gmail_app_password:
+        print("[✗] Missing Gmail app password, cannot send email.")
         return
 
     msg = EmailMessage()
-    msg['Subject'] = 'Your UX Autorater Full Report'
-    msg['From'] = sender_email
-    msg['To'] = recipient_email
-    msg.set_content("Thanks for your purchase! Your full UX feedback report is attached.")
-
-    with open(filename, 'rb') as f:
-        file_data = f.read()
-        msg.add_attachment(file_data, maintype='application', subtype='pdf', filename=filename)
+    msg["Subject"] = "Your UX Autorater Report"
+    msg["From"] = sender_email
+    msg["To"] = email
+    msg.set_content("Thanks for your purchase! Your UX feedback report is attached.")
 
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, app_password)
+        with open(filename, "rb") as f:
+            msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=filename)
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(sender_email, gmail_app_password)
             smtp.send_message(msg)
-        print(f"[✓] Email sent to: {recipient_email}")
+        print(f"[✓] Email sent to {email}")
     except Exception as e:
-        print(f"[✗] ERROR sending email: {e}")
+        print(f"[✗] Failed to send email: {e}")
 
-def generate_and_send_report(client, ux_text, email, personas):
-    print(f"[→] Starting report generation for: {email}")
-    try:
-        feedbacks = {}
-        for persona in personas:
-            feedbacks[persona] = generate_persona_feedback(client, ux_text, persona)
+    # --- 4. Clean up ---
+    if os.path.exists(filename):
+        os.remove(filename)
+        print(f"[✓] Temp file deleted: {filename}")
 
-        filename = f"UX_Report_{email.replace('@', '_')}.pdf"
-        generate_pdf_report(ux_text, feedbacks, filename)
-
-        print(f"[→] Calling send_email_with_pdf()")
-        send_email_with_pdf(email, filename)
-
-        # Optional cleanup
-        if os.path.exists(filename):
-            os.remove(filename)
-            print(f"[✓] Temp file deleted: {filename}")
-    except Exception as e:
-        print(f"[✗] ERROR in generate_and_send_report: {e}")
 
 
 
