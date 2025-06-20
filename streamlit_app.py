@@ -194,9 +194,9 @@ if st.button("💳 Buy Full Evaluation"):
                 try:
                     data = res.json()
                     checkout_url = data.get("checkout_url")
-    except ValueError:
-        st.error("Server response was not valid JSON.")
-        checkout_url = None
+                except ValueError:
+                st.error("Server response was not valid JSON.")
+                checkout_url = None
 
                 if checkout_url:
                     st.success("Redirecting to Stripe...")
