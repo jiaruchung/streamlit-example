@@ -29,6 +29,14 @@ app = FastAPI()
 async def root():
     return {"message": "✅ FastAPI server is running!"}
 
+@app.get("/success")
+async def success_page():
+    return {"message": "✅ Payment successful! Your UX report will be emailed within a few minutes."}
+
+@app.get("/cancel")
+async def cancel_page():
+    return {"message": "⚠️ Payment was canceled. Feel free to try again later."}
+
 @app.post("/create_checkout_session")
 async def create_checkout_session(req: Request):
     data = await req.json()
@@ -154,6 +162,7 @@ def generate_and_send_report(email, persona, ux_input):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
 
