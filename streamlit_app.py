@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import requests
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -163,14 +164,38 @@ if st.button("Run Autorater"):
     else:
         st.warning("Please enter UX copy first.")
 
-# Stripe CTA
+# Stripe CTA for full report
 st.divider()
 st.markdown("### 🔒 Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
+
+user_email = st.text_input("Your email address (for report delivery):", "")
+
 st.markdown(
-    '<a class="buy-button" href="https://buy.stripe.com/test_eVq4gy4UI6If01Le8odQQ00">💳 Buy Full Evaluation →</a>',
+    '<p><b>After payment, a detailed report will be sent to your email within 1–3 minutes.</b></p>',
     unsafe_allow_html=True
 )
+
+if st.button("💳 Buy Full Evaluation"):
+    if not user_email or not ux_input.strip():
+        st.warning("Please enter your email and UX input before purchasing.")
+    else:
+        with st.spinner("Creating Stripe Checkout..."):
+            try:
+                res = requests.post("https://streamlit-example-1thq.onrender.com/create_checkout_session", json={
+                    "email": user_email,
+                    "persona": persona,
+                    "ux_input": ux_input
+                })
+                checkout_url = res.json().get("checkout_url")
+                if checkout_url:
+                    st.success("Redirecting to Stripe...")
+                    st.markdown(f'<a href="{checkout_url}" target="_blank" class="buy-button">Proceed to Payment</a>', unsafe_allow_html=True)
+                else:
+                    st.error("Failed to create checkout session.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
 
 
 
