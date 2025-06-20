@@ -2,6 +2,7 @@ import os
 import stripe
 from openai import OpenAI
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from fpdf import FPDF
 import smtplib
@@ -22,12 +23,48 @@ print("[DEBUG] STRIPE_SECRET_KEY loaded:", bool(stripe.api_key))
 print("[DEBUG] STRIPE_WEBHOOK_SECRET loaded:", bool(endpoint_secret))
 print("[DEBUG] SENDER_EMAIL loaded:", SENDER_EMAIL)
 
-# FastAPI setup
+# FastAPI app
 app = FastAPI()
 
 @app.get("/")
 async def root():
     return {"message": "✅ FastAPI server is running!"}
+
+@app.post("/create_checkout_session")
+async def create_checkout_session(request: Request):
+    body = await request.json()
+    email = body.get("email")
+    ux_input = body.get("ux_input", "")
+    persona = body.get("persona", "General User")
+
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": "UX Autorater Full Report",
+                        "description": f"Evaluation for persona: {persona}"
+                    },
+                    "unit_amount": 500,  # $5.00 USD
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            customer_email=email,
+            metadata={
+                "persona": persona,
+                "ux_input": ux_input,
+            },
+            success_url="https://streamlit-example-1thq.onrender.com?success=true",
+            cancel_url="https://streamlit-example-1thq.onrender.com?canceled=true",
+        )
+
+        return JSONResponse({"checkout_url": session.url})
+    except Exception as e:
+        print(f"[ERROR] Failed to create Stripe session: {e}")
+        raise HTTPException(status_code=500, detail="Could not create Stripe session")
 
 @app.post("/webhook")
 async def stripe_webhook(request: Request):
@@ -120,6 +157,7 @@ def generate_and_send_report(email, persona, ux_input):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
 
