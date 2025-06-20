@@ -2,7 +2,6 @@ import os
 import stripe
 from openai import OpenAI
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from fpdf import FPDF
 import smtplib
@@ -31,40 +30,39 @@ async def root():
     return {"message": "✅ FastAPI server is running!"}
 
 @app.post("/create_checkout_session")
-async def create_checkout_session(request: Request):
-    body = await request.json()
-    email = body.get("email")
-    ux_input = body.get("ux_input", "")
-    persona = body.get("persona", "General User")
+async def create_checkout_session(req: Request):
+    data = await req.json()
+    email = data.get("email")
+    persona = data.get("persona")
+    ux_input = data.get("ux_input")
+
+    if not all([email, persona, ux_input]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
 
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
+            mode="payment",
             line_items=[{
                 "price_data": {
                     "currency": "usd",
+                    "unit_amount": 700,  # $7.00
                     "product_data": {
-                        "name": "UX Autorater Full Report",
-                        "description": f"Evaluation for persona: {persona}"
-                    },
-                    "unit_amount": 500,  # $5.00 USD
+                        "name": "UX Autorater Report",
+                        "description": f"Persona: {persona}"
+                    }
                 },
-                "quantity": 1,
+                "quantity": 1
             }],
-            mode="payment",
-            customer_email=email,
-            metadata={
-                "persona": persona,
-                "ux_input": ux_input,
-            },
-            success_url="https://streamlit-example-1thq.onrender.com?success=true",
-            cancel_url="https://streamlit-example-1thq.onrender.com?canceled=true",
+            success_url="https://streamlit-example-1-dwdp.onrender.com/success",
+            cancel_url="https://streamlit-example-1-dwdp.onrender.com/cancel",
+            metadata={"persona": persona, "ux_input": ux_input},
+            customer_email=email
         )
-
-        return JSONResponse({"checkout_url": session.url})
+        return {"checkout_url": session.url}
     except Exception as e:
-        print(f"[ERROR] Failed to create Stripe session: {e}")
-        raise HTTPException(status_code=500, detail="Could not create Stripe session")
+        print(f"❌ Stripe session creation failed: {e}")
+        raise HTTPException(status_code=500, detail="Stripe session creation failed")
 
 @app.post("/webhook")
 async def stripe_webhook(request: Request):
@@ -83,7 +81,6 @@ async def stripe_webhook(request: Request):
         persona = metadata.get("persona", "general user")
         ux_input = metadata.get("ux_input", "No input provided")
         print(f"✅ Payment received from: {customer_email}")
-        print(f"[Metadata] persona={persona}, ux_input={ux_input[:40]}...")
         generate_and_send_report(customer_email, persona, ux_input)
 
     return {"status": "ok"}
@@ -157,6 +154,7 @@ def generate_and_send_report(email, persona, ux_input):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
 
