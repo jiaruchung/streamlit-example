@@ -156,14 +156,14 @@ if st.button("Run Autorater"):
     if ux_input.strip():
         with st.spinner("Simulating feedback..."):
             feedback = get_feedback(ux_input, persona)
-            st.markdown("### 📝 Simulated Feedback")
+            st.markdown("### Simulated Feedback")
             st.text_area("Persona Feedback", feedback, height=300)
     else:
         st.warning("Please enter UX copy first.")
 
 # Stripe CTA
 st.divider()
-st.markdown("### 🔒 Want a full UX report?")
+st.markdown("### Want a full UX report?")
 st.markdown("Get a complete accessibility audit including PDF download, persona comparisons, and expert design suggestions.")
 
 user_email = st.text_input("Your email address (for report delivery):", "")
@@ -173,7 +173,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-if st.button("💳 Buy Full Evaluation"):
+if st.button("Buy Full Evaluation"):
     if not user_email or not ux_input.strip():
         st.warning("Please enter your email and UX input before purchasing.")
     else:
