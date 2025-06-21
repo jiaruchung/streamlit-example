@@ -28,7 +28,7 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return RedirectResponse(url="https://jiaruchung-streamlit-example.streamlit.app/")
+    return RedirectResponse(url="https://jiaruchung-streamlit-example-streamlit-app-v43dp6.streamlit.app/")
 
 @app.get("/success")
 async def success_page():
