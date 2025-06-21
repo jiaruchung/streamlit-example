@@ -16,6 +16,8 @@ st.set_page_config(page_title="Persona UX Autorater", layout="wide")
 # ✅ Google Search Console verification tag
 st.markdown("""
 <meta name="google-site-verification" content="DIF1zf0tpgN2e5IKjBq0wngPmJnqMim0tA6JjqV8puA" />
+<meta name="description" content="AI-powered UX feedback simulator. Test your copy for accessibility with ADHD, Autism, ESL, and vision-impaired personas.">
+<title>Accessibility UX Autorater – Inclusive Design Made Easy</title>
 """, unsafe_allow_html=True)
 
 # Custom styling
