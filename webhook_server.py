@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from fpdf import FPDF
 import smtplib
 from email.message import EmailMessage
+from fastapi.responses import RedirectResponse
 
 # Load environment variables
 load_dotenv()
@@ -27,7 +28,7 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "✅ FastAPI server is running!"}
+    return RedirectResponse(url="https://jiaruchung-streamlit-example.streamlit.app/")
 
 @app.get("/success")
 async def success_page():
@@ -93,6 +94,9 @@ async def stripe_webhook(request: Request):
 
     return {"status": "ok"}
 
+def safe_pdf(text):
+    return text.encode("latin-1", errors="ignore").decode("latin-1")
+
 def generate_and_send_report(email, persona, ux_input):
     print(f"📄 Generating report for {email}...")
 
@@ -122,14 +126,14 @@ def generate_and_send_report(email, persona, ux_input):
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
+        pdf.cell(200, 10, txt=safe_pdf("Your UX Report"), ln=True, align="C")
         pdf.ln()
         pdf.set_font("Arial", size=11)
-        pdf.multi_cell(0, 10, f"Persona: {persona}")
+        pdf.multi_cell(0, 10, safe_pdf(f"Persona: {persona}"))
         pdf.ln()
-        pdf.multi_cell(0, 10, f"User Input:\n{ux_input}")
+        pdf.multi_cell(0, 10, safe_pdf(f"User Input:\n{ux_input}"))
         pdf.ln()
-        pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{ux_feedback}")
+        pdf.multi_cell(0, 10, safe_pdf(f"AI-Generated Feedback:\n{ux_feedback}"))
         pdf.output(filename)
         print(f"[✓] PDF saved as {filename}")
     except Exception as e:
