@@ -13,6 +13,11 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Page configuration
 st.set_page_config(page_title="Persona UX Autorater", layout="wide")
 
+# ✅ Google Search Console verification tag
+st.markdown("""
+<meta name="google-site-verification" content="DIF1zf0tpgN2e5IKjBq0wngPmJnqMim0tA6JjqV8puA" />
+""", unsafe_allow_html=True)
+
 # Custom styling
 st.markdown("""
 <style>
@@ -185,7 +190,6 @@ if st.button("Buy Full Evaluation"):
                     "ux_input": ux_input
                 })
 
-                # DEBUG log
                 st.code(f"Status code: {res.status_code}\nResponse text:\n{res.text}")
 
                 try:
@@ -202,6 +206,7 @@ if st.button("Buy Full Evaluation"):
                     st.error("Failed to create checkout session.")
             except Exception as e:
                 st.error(f"Error: {e}")
+
 
 
 
