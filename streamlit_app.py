@@ -179,7 +179,7 @@ if st.button("💳 Buy Full Evaluation"):
     else:
         with st.spinner("Creating Stripe Checkout..."):
             try:
-                res = requests.post("https://correct.onrender.com/webhook/create_checkout_session", json={
+                res = requests.post("https://new.onrender.com/webhook/create_checkout_session", json={
                     "email": user_email,
                     "persona": persona,
                     "ux_input": ux_input
