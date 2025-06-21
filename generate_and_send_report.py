@@ -48,23 +48,17 @@ def generate_and_send_report(email, persona, ux_input):
     try:
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
+        pdf.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
+        pdf.set_font("DejaVu", "", 12)
+
+        pdf.cell(0, 10, "Your UX Report", ln=True, align="C")
         pdf.ln()
-        pdf.set_font("Arial", size=11)
 
         pdf.multi_cell(0, 10, f"Persona: {persona}")
         pdf.ln()
         pdf.multi_cell(0, 10, f"User Input:\n{ux_input}")
         pdf.ln()
-
-        try:
-            # Try writing feedback directly
-            pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{ux_feedback}")
-        except UnicodeEncodeError:
-            # Fallback if special characters like emojis cause errors
-            pdf.multi_cell(0, 10, "⚠️ Some characters (like emojis) couldn't be rendered in the PDF.")
-            print("[!] Some characters could not be encoded in PDF (e.g., emojis)")
+        pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{ux_feedback}")
 
         pdf.output(filename)
         print(f"[✓] PDF report saved as: {filename}")
