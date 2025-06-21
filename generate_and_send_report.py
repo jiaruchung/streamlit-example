@@ -32,7 +32,7 @@ def generate_and_send_report(email, persona, ux_input):
         f"You are a professional UX researcher specializing in {persona}.\n\n"
         "Analyze the following user interaction data or feedback and generate a structured UX report.\n"
         "Provide a brief summary (Clarity, Cognitive Load, Personalization), followed by specific actionable suggestions.\n"
-        "Keep the language professional, but accessible. Do not include emojis.\n\n"
+        "Keep the language professional, but accessible.\n\n"
         f"User input: '{ux_input}'"
     )
 
@@ -41,12 +41,12 @@ def generate_and_send_report(email, persona, ux_input):
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
-        raw_feedback = response.choices[0].message.content.strip()
-        ux_feedback = safe_pdf(raw_feedback)  # Clean here
+        ux_feedback = response.choices[0].message.content.strip()
         print("[✓] Feedback generated from OpenAI")
+        print("[DEBUG] Raw feedback:", ux_feedback)
     except Exception as e:
         print(f"[✗] Failed to generate feedback from OpenAI: {e}")
-        ux_feedback = safe_pdf("Could not generate feedback due to an error.")
+        ux_feedback = "Could not generate feedback due to an error."
 
     # --- 2. Generate PDF Report ---
     filename = f"UX_Report_{email.replace('@', '_')}.pdf"
@@ -94,6 +94,7 @@ def generate_and_send_report(email, persona, ux_input):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
 
