@@ -20,12 +20,12 @@ print("[DEBUG] SENDER_EMAIL loaded:", sender_email)
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
 
-# Helper function to remove non-ASCII characters
-def ascii_safe(text):
-    return text.encode("ascii", errors="ignore").decode()
+def safe_pdf(text):
+    """Removes characters not supported by latin-1 for FPDF."""
+    return text.encode("latin-1", errors="ignore").decode("latin-1")
 
 def generate_and_send_report(email, persona, ux_input):
-    print(f"[→] Starting report generation for: {email} | Persona: {persona}")
+    print(f"📄 Generating report for {email}...")
 
     # --- 1. Generate UX Feedback via OpenAI ---
     prompt = (
@@ -42,7 +42,7 @@ def generate_and_send_report(email, persona, ux_input):
             messages=[{"role": "user", "content": prompt}]
         )
         ux_feedback = response.choices[0].message.content.strip()
-        print("[✓] OpenAI feedback generated")
+        print("[✓] Feedback generated from OpenAI")
     except Exception as e:
         print(f"[✗] Failed to generate feedback from OpenAI: {e}")
         ux_feedback = "Could not generate feedback due to an error."
@@ -52,19 +52,19 @@ def generate_and_send_report(email, persona, ux_input):
     try:
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Helvetica", size=12)
-        pdf.cell(200, 10, txt=ascii_safe("Your UX Report"), ln=True, align="C")
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt=safe_pdf("Your UX Report"), ln=True, align="C")
         pdf.ln()
-        pdf.set_font("Helvetica", size=11)
-        pdf.multi_cell(0, 10, ascii_safe(f"Persona: {persona}"))
+        pdf.set_font("Arial", size=11)
+        pdf.multi_cell(0, 10, safe_pdf(f"Persona: {persona}"))
         pdf.ln()
-        pdf.multi_cell(0, 10, ascii_safe(f"User Input:\n{ux_input}"))
+        pdf.multi_cell(0, 10, safe_pdf(f"User Input:\n{ux_input}"))
         pdf.ln()
-        pdf.multi_cell(0, 10, ascii_safe(f"AI-Generated Feedback:\n{ux_feedback}"))
+        pdf.multi_cell(0, 10, safe_pdf(f"AI-Generated Feedback:\n{ux_feedback}"))
         pdf.output(filename)
         print(f"[✓] PDF report saved as: {filename}")
     except Exception as e:
-        print(f"[✗] Failed to generate PDF: {e}")
+        print(f"[✗] Failed to create PDF: {e}")
         return
 
     # --- 3. Email the Report ---
@@ -93,6 +93,7 @@ def generate_and_send_report(email, persona, ux_input):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
 
