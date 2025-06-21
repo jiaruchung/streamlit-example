@@ -11,11 +11,11 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
 sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")  # default fallback
 
-print("[DEBUG] OPENAI_API_KEY loaded:", bool(os.getenv("OPENAI_API_KEY")))
-print("[DEBUG] GMAIL_APP_PASSWORD loaded:", bool(os.getenv("GMAIL_APP_PASSWORD")))
+print("[DEBUG] OPENAI_API_KEY loaded:", bool(openai_api_key))
+print("[DEBUG] GMAIL_APP_PASSWORD loaded:", bool(gmail_app_password))
 print("[DEBUG] STRIPE_SECRET_KEY loaded:", bool(os.getenv("STRIPE_SECRET_KEY")))
 print("[DEBUG] STRIPE_WEBHOOK_SECRET loaded:", bool(os.getenv("STRIPE_WEBHOOK_SECRET")))
-print("[DEBUG] SENDER_EMAIL loaded:", os.getenv("SENDER_EMAIL"))
+print("[DEBUG] SENDER_EMAIL loaded:", sender_email)
 
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
@@ -52,11 +52,20 @@ def generate_and_send_report(email, persona, ux_input):
         pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
         pdf.ln()
         pdf.set_font("Arial", size=11)
+
         pdf.multi_cell(0, 10, f"Persona: {persona}")
         pdf.ln()
         pdf.multi_cell(0, 10, f"User Input:\n{ux_input}")
         pdf.ln()
-        pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{ux_feedback}")
+
+        try:
+            # Try writing feedback directly
+            pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{ux_feedback}")
+        except UnicodeEncodeError:
+            # Fallback if special characters like emojis cause errors
+            pdf.multi_cell(0, 10, "⚠️ Some characters (like emojis) couldn't be rendered in the PDF.")
+            print("[!] Some characters could not be encoded in PDF (e.g., emojis)")
+
         pdf.output(filename)
         print(f"[✓] PDF report saved as: {filename}")
     except Exception as e:
@@ -89,6 +98,7 @@ def generate_and_send_report(email, persona, ux_input):
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
+
 
 
 
