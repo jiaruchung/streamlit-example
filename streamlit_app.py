@@ -63,49 +63,49 @@ a.buy-button:hover {
 """, unsafe_allow_html=True)
 
 # Header
-st.title("👥 Persona-Based UX Autorater")
+st.title("Persona-Based UX Autorater")
 st.subheader("Simulate accessibility feedback from diverse users — before you ship.")
 st.markdown("Test your UX copy using AI-generated feedback from **neurodiverse and accessibility personas**. Make your products more inclusive and user-friendly.")
 
 # Personas table
-st.markdown("### 💡 Supported Personas")
+st.markdown("###Supported Personas")
 st.markdown("""
 <table>
 <tr>
   <td><img src="https://img.icons8.com/color/100/adhd.png" class="persona-img"></td>
-  <td>🧠 <b>ADHD</b><br>Easily distracted, overwhelmed by cluttered or vague text</td>
+  <td><b>ADHD</b><br>Easily distracted, overwhelmed by cluttered or vague text</td>
 </tr>
 <tr>
   <td><img src="https://img.icons8.com/color/100/autism.png" class="persona-img"></td>
-  <td>🧩 <b>Autism</b><br>Prefers clear, literal, structured, and emotionally neutral content</td>
+  <td><b>Autism</b><br>Prefers clear, literal, structured, and emotionally neutral content</td>
 </tr>
 <tr>
   <td><img src="https://img.icons8.com/color/100/language.png" class="persona-img"></td>
-  <td>🌍 <b>ESL</b><br>May struggle with idioms, slang, or overly complex grammar</td>
+  <td><b>ESL</b><br>May struggle with idioms, slang, or overly complex grammar</td>
 </tr>
 <tr>
   <td><img src="https://img.icons8.com/color/100/visible.png" class="persona-img"></td>
-  <td>👁️ <b>Low Vision</b><br>Uses screen readers or magnifiers; prefers linear and concise layout</td>
+  <td><b>Low Vision</b><br>Uses screen readers or magnifiers; prefers linear and concise layout</td>
 </tr>
 </table>
 """, unsafe_allow_html=True)
 
 # Persona select
 persona = st.selectbox("Choose a simulated user persona:", [
-    "🧠 ADHD",
-    "🧩 Autism",
-    "🌍 ESL (English as Second Language)",
-    "👁️ Vision-Impaired (Screen Reader)"
+    "ADHD",
+    "Autism",
+    "ESL (English as Second Language)",
+    "Vision-Impaired (Screen Reader)"
 ])
 
 # UX Input
-st.markdown("### 🎯 Try It Free")
+st.markdown("### Try It Free")
 default_example = "Thanks! We’ve received your request. You’ll get a response shortly."
 ux_input = st.text_area("Enter your UX copy:", value=default_example, height=180)
 
 # Prompt builder
 def build_prompt(ux_text, persona):
-    if persona == "🧠 ADHD":
+    if persona == "ADHD":
         return f"""You are simulating feedback from a user with ADHD.
 Evaluate this UX copy:
 {ux_text}
@@ -113,7 +113,7 @@ Evaluate this UX copy:
 1. Does the language feel too fast, dense, or distracting?
 2. Is attention required to interpret? How could it be more direct?
 3. Suggestions to reduce cognitive load."""
-    elif persona == "🧩 Autism":
+    elif persona == "Autism":
         return f"""You are simulating feedback from a user with autistic traits.
 Evaluate this UX copy:
 {ux_text}
@@ -121,7 +121,7 @@ Evaluate this UX copy:
 1. Is the tone overly casual or ambiguous?
 2. Are there any confusing phrases or vague timing?
 3. Suggestions for clarity, predictability, and directness."""
-    elif persona == "🌍 ESL (English as Second Language)":
+    elif persona == "ESL (English as Second Language)":
         return f"""You are simulating feedback from an ESL user.
 Evaluate this UX copy:
 {ux_text}
@@ -129,7 +129,7 @@ Evaluate this UX copy:
 1. Are there idioms, jargon, or complex phrasing?
 2. How simple is the vocabulary and grammar?
 3. Suggestions for clearer and easier-to-translate language."""
-    elif persona == "👁️ Vision-Impaired (Screen Reader)":
+    elif persona == "Vision-Impaired (Screen Reader)":
         return f"""You are simulating feedback from a user relying on screen reader software.
 Evaluate this UX copy:
 {ux_text}
