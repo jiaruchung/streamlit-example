@@ -100,7 +100,7 @@ persona = st.selectbox("Choose a simulated user persona:", [
 
 # UX Input
 st.markdown("### Try It Free")
-default_example = "Thanks! We’ve received your request. You’ll get a response shortly."
+default_example = "Thanks! We've received your request. You'll get a response shortly."
 ux_input = st.text_area("Enter your UX copy:", value=default_example, height=180)
 
 # Prompt builder
