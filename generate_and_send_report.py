@@ -5,11 +5,11 @@ import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
 
-# --- Load environment variables ---
+# Load environment variables
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
-sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")
+sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")  # default fallback
 
 print("[DEBUG] OPENAI_API_KEY loaded:", bool(openai_api_key))
 print("[DEBUG] GMAIL_APP_PASSWORD loaded:", bool(gmail_app_password))
@@ -17,24 +17,22 @@ print("[DEBUG] STRIPE_SECRET_KEY loaded:", bool(os.getenv("STRIPE_SECRET_KEY")))
 print("[DEBUG] STRIPE_WEBHOOK_SECRET loaded:", bool(os.getenv("STRIPE_WEBHOOK_SECRET")))
 print("[DEBUG] SENDER_EMAIL loaded:", sender_email)
 
-# --- Initialize OpenAI client ---
+# Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
 
-# --- Helper: Strip non-latin-1 characters (like emojis) ---
 def safe_pdf(text):
     """Removes characters not supported by latin-1 for FPDF."""
     return text.encode("latin-1", errors="ignore").decode("latin-1")
 
-# --- Main Function ---
 def generate_and_send_report(email, persona, ux_input):
     print(f"📄 Generating report for {email}...")
 
-    # 1. Generate UX Feedback via OpenAI
+    # --- 1. Generate UX Feedback via OpenAI ---
     prompt = (
         f"You are a professional UX researcher specializing in {persona}.\n\n"
         "Analyze the following user interaction data or feedback and generate a structured UX report.\n"
         "Provide a brief summary (Clarity, Cognitive Load, Personalization), followed by specific actionable suggestions.\n"
-        "Keep the language professional, but accessible.\n\n"
+        "Keep the language professional, but accessible. Do not include emojis or special characters.\n\n"
         f"User input: '{ux_input}'"
     )
 
@@ -49,7 +47,7 @@ def generate_and_send_report(email, persona, ux_input):
         print(f"[✗] Failed to generate feedback from OpenAI: {e}")
         ux_feedback = "Could not generate feedback due to an error."
 
-    # 2. Generate PDF Report
+    # --- 2. Generate PDF Report ---
     filename = f"UX_Report_{email.replace('@', '_')}.pdf"
     try:
         pdf = FPDF()
@@ -69,7 +67,7 @@ def generate_and_send_report(email, persona, ux_input):
         print(f"[✗] Failed to create PDF: {e}")
         return
 
-    # 3. Email the Report
+    # --- 3. Email the Report ---
     if not gmail_app_password:
         print("[✗] Missing Gmail app password, cannot send email.")
         return
@@ -91,7 +89,7 @@ def generate_and_send_report(email, persona, ux_input):
     except Exception as e:
         print(f"[✗] Failed to send email: {e}")
 
-    # 4. Clean up
+    # --- 4. Clean up ---
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
