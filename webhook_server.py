@@ -62,8 +62,8 @@ async def create_checkout_session(req: Request):
                 },
                 "quantity": 1
             }],
-            success_url="https://streamlit-example-1-dwdp.onrender.com/success",
-            cancel_url="https://streamlit-example-1-dwdp.onrender.com/cancel",
+            success_url="https://httpbin.org/get",
+            cancel_url="https://httpbin.org/status/400",
             metadata={"persona": persona, "ux_input": ux_input},
             customer_email=email
         )
