@@ -179,7 +179,7 @@ if st.button("💳 Buy Full Evaluation"):
     else:
         with st.spinner("Creating Stripe Checkout..."):
             try:
-                res = requests.post("https://streamlit-example-1-dwdp.onrender.com/create_checkout_session", json={
+                res = requests.post("https://fastapi-service-name.onrender.com/create_checkout_session", json={
                     "email": user_email,
                     "persona": persona,
                     "ux_input": ux_input
