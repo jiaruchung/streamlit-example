@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
-sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")
+sender_email = os.getenv("SENDER_EMAIL", "jc55248@gmail.com")  # default fallback
 
 print("[DEBUG] OPENAI_API_KEY loaded:", bool(openai_api_key))
 print("[DEBUG] GMAIL_APP_PASSWORD loaded:", bool(gmail_app_password))
@@ -20,14 +20,14 @@ print("[DEBUG] SENDER_EMAIL loaded:", sender_email)
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
 
-# Helper to remove unsupported characters for FPDF's default fonts
-def remove_non_ascii(text):
+# Helper function to remove non-ASCII characters
+def ascii_safe(text):
     return text.encode("ascii", errors="ignore").decode()
 
 def generate_and_send_report(email, persona, ux_input):
     print(f"[→] Starting report generation for: {email} | Persona: {persona}")
 
-    # 1. Generate UX Feedback via OpenAI
+    # --- 1. Generate UX Feedback via OpenAI ---
     prompt = (
         f"You are a professional UX researcher specializing in {persona}.\n\n"
         "Analyze the following user interaction data or feedback and generate a structured UX report.\n"
@@ -47,27 +47,27 @@ def generate_and_send_report(email, persona, ux_input):
         print(f"[✗] Failed to generate feedback from OpenAI: {e}")
         ux_feedback = "Could not generate feedback due to an error."
 
-    # 2. Generate PDF Report using built-in font
+    # --- 2. Generate PDF Report ---
     filename = f"UX_Report_{email.replace('@', '_')}.pdf"
     try:
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Helvetica", size=12)
-        pdf.cell(200, 10, txt="Your UX Report", ln=True, align="C")
+        pdf.cell(200, 10, txt=ascii_safe("Your UX Report"), ln=True, align="C")
         pdf.ln()
         pdf.set_font("Helvetica", size=11)
-        pdf.multi_cell(0, 10, f"Persona: {remove_non_ascii(persona)}")
+        pdf.multi_cell(0, 10, ascii_safe(f"Persona: {persona}"))
         pdf.ln()
-        pdf.multi_cell(0, 10, f"User Input:\n{remove_non_ascii(ux_input)}")
+        pdf.multi_cell(0, 10, ascii_safe(f"User Input:\n{ux_input}"))
         pdf.ln()
-        pdf.multi_cell(0, 10, f"AI-Generated Feedback:\n{remove_non_ascii(ux_feedback)}")
+        pdf.multi_cell(0, 10, ascii_safe(f"AI-Generated Feedback:\n{ux_feedback}"))
         pdf.output(filename)
         print(f"[✓] PDF report saved as: {filename}")
     except Exception as e:
         print(f"[✗] Failed to generate PDF: {e}")
         return
 
-    # 3. Email the Report
+    # --- 3. Email the Report ---
     if not gmail_app_password:
         print("[✗] Missing Gmail app password, cannot send email.")
         return
@@ -89,7 +89,7 @@ def generate_and_send_report(email, persona, ux_input):
     except Exception as e:
         print(f"[✗] Failed to send email: {e}")
 
-    # 4. Clean up
+    # --- 4. Clean up ---
     if os.path.exists(filename):
         os.remove(filename)
         print(f"[✓] Temp file deleted: {filename}")
